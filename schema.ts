@@ -34,7 +34,7 @@ const schema = createSchema({
       }
     },
     Team: {
-      players: (team) => {
+      players: team => {
         return team.getPlayers()
       }
     }

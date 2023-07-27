@@ -8,16 +8,16 @@ import database from './database'
 
 const yoga = createYoga({ schema })
 
-const app: Express = express();
-const port = process.env.PORT || 3000;
+const app: Express = express()
+const port = process.env.PORT || 3000
 
-app.use(morgan('combined'));
+app.use(morgan('combined'))
 
 app.use(yoga.graphqlEndpoint, yoga)
 
 app.get('/', (req: Request, res: Response) => {
   res.redirect('/graphql')
-});
+})
 
 app.listen(port, async () => {
   try {
@@ -27,5 +27,7 @@ app.listen(port, async () => {
     console.error('Unable to connect to the database:', err)
   }
 
-  console.log(`[server]: Running a GraphQL API server at http://localhost:${port}/graphql`);
-});
+  console.log(
+    `[server]: Running a GraphQL API server at http://localhost:${port}/graphql`
+  )
+})
