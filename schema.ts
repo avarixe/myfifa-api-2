@@ -1,5 +1,4 @@
 import { createSchema } from 'graphql-yoga'
-import database from './database'
 
 const schema = createSchema({
   typeDefs: `
@@ -25,18 +24,7 @@ const schema = createSchema({
   `,
   resolvers: {
     Query: {
-      hello: () => 'world',
-      teams: () => {
-        return database.models.team.findAll()
-      },
-      team: (_, { id }) => {
-        return database.models.team.findByPk(parseInt(id))
-      }
-    },
-    Team: {
-      players: team => {
-        return team.getPlayers()
-      }
+      hello: () => 'world'
     }
   }
 })

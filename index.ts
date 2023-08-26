@@ -4,7 +4,10 @@ import 'dotenv/config'
 
 import { createYoga } from 'graphql-yoga'
 import schema from './schema'
-import database from './database'
+
+BigInt.prototype.toJSON = function () {
+  return this.toString()
+}
 
 const yoga = createYoga({ schema })
 
@@ -20,13 +23,6 @@ app.get('/', (req: Request, res: Response) => {
 })
 
 app.listen(port, async () => {
-  try {
-    await database.authenticate()
-    console.log('Connection has been established successfully')
-  } catch (err) {
-    console.error('Unable to connect to the database:', err)
-  }
-
   console.log(
     `[server]: Running a GraphQL API server at http://localhost:${port}/graphql`
   )
