@@ -3,9 +3,14 @@ import morgan from 'morgan'
 import 'dotenv/config'
 
 import { createYoga } from 'graphql-yoga'
-import schema from './schema'
+import { schema } from './schema'
 
-const yoga = createYoga({ schema })
+const yoga = createYoga({
+  schema,
+  context: req => {
+    return { req }
+  }
+})
 
 const app: Express = express()
 const port = process.env.PORT || 3000
