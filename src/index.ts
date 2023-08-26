@@ -5,10 +5,6 @@ import 'dotenv/config'
 import { createYoga } from 'graphql-yoga'
 import schema from './schema'
 
-BigInt.prototype.toJSON = function () {
-  return this.toString()
-}
-
 const yoga = createYoga({ schema })
 
 const app: Express = express()
