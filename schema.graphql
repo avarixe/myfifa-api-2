@@ -1,3 +1,27 @@
+type Booking {
+  createdAt: DateTime!
+  home: Boolean!
+  id: ID!
+  matchId: ID!
+  minute: Int!
+  playerId: ID
+  playerName: String!
+  redCard: Boolean!
+}
+
+type Cap {
+  createdAt: DateTime!
+  id: ID!
+  matchId: ID!
+  ovr: Int
+  playerId: ID!
+  pos: String!
+  rating: Int
+  start: Int!
+  stop: Int!
+  subbedOut: Boolean!
+}
+
 type Competition {
   champion: String
   createdAt: DateTime!
@@ -54,6 +78,20 @@ type FixtureLeg {
   id: ID!
 }
 
+type Goal {
+  assistId: ID
+  assistedBy: String
+  createdAt: DateTime!
+  home: Boolean!
+  id: ID!
+  matchId: ID!
+  minute: Int!
+  ownGoal: Boolean!
+  penalty: Boolean!
+  playerId: ID
+  playerName: String!
+}
+
 type Injury {
   createdAt: DateTime!
   description: String!
@@ -75,6 +113,35 @@ type Loan {
   startedOn: Date!
   transferFee: Int
   wagePercentage: Int
+}
+
+type Match {
+  away: String!
+  awayScore: Int!
+  bookings: [Booking!]!
+  caps: [Cap!]!
+  competition: String
+  createdAt: DateTime!
+  extraTime: Boolean!
+  friendly: Boolean!
+  goals: [Goal!]!
+  home: String!
+  homeScore: Int!
+  id: ID!
+  penaltyShootout: PenaltyShootout
+  playedOn: Date!
+  season: Int!
+  stage: String
+  substitutions: [Substitution!]!
+  teamId: ID!
+}
+
+type PenaltyShootout {
+  awayScore: Int!
+  createdAt: DateTime!
+  homeScore: Int!
+  id: ID!
+  matchId: ID!
 }
 
 type Player {
@@ -110,6 +177,7 @@ type PlayerHistory {
 
 type Query {
   competition(id: ID!): Competition
+  match(id: ID!): Match
   player(id: ID!): Player
   team(id: ID!): Team
   teams: [Team!]!
@@ -127,6 +195,18 @@ type Stage {
   tableRows: [TableRow!]!
 }
 
+type Substitution {
+  createdAt: DateTime!
+  id: ID!
+  injury: Boolean!
+  matchId: ID!
+  minute: Int!
+  playerId: ID!
+  playerName: String!
+  replacedBy: String!
+  replacementId: ID!
+}
+
 type TableRow {
   createdAt: DateTime!
   draws: Int
@@ -140,14 +220,18 @@ type TableRow {
 }
 
 type Team {
+  competitions: [Competition!]!
   createdAt: DateTime!
   currency: String!
   currentlyOn: Date!
   game: String
   id: ID!
   managerName: String
+  matches: [Match!]!
   name: String!
+  next: Team
   players: [Player!]!
+  previous: Team
   previousId: ID
   startedOn: Date!
   userId: ID!
