@@ -6,6 +6,14 @@ builder.prismaObject('Goal', {
     id: t.id({ resolve: goal => goal.id.toString() }),
     matchId: t.id({ resolve: goal => goal.matchId.toString() }),
     minute: t.exposeInt('minute'),
+    capId: t.id({
+      resolve: goal => goal.capId?.toString(),
+      nullable: true
+    }),
+    assistCapId: t.id({
+      resolve: goal => goal.assistCapId?.toString(),
+      nullable: true
+    }),
     playerId: t.id({
       resolve: goal => goal.playerId?.toString(),
       nullable: true

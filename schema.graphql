@@ -9,6 +9,7 @@ type AccessToken {
 }
 
 type Booking {
+  capId: ID
   createdAt: DateTime!
   home: Boolean!
   id: ID!
@@ -22,14 +23,15 @@ type Booking {
 type Cap {
   createdAt: DateTime!
   id: ID!
+  injured: Boolean!
   matchId: ID!
+  nextId: ID
   ovr: Int
   playerId: ID!
   pos: String!
   rating: Int
   start: Int!
   stop: Int!
-  subbedOut: Boolean!
 }
 
 type Competition {
@@ -89,8 +91,10 @@ type FixtureLeg {
 }
 
 type Goal {
+  assistCapId: ID
   assistId: ID
   assistedBy: String
+  capId: ID
   createdAt: DateTime!
   home: Boolean!
   id: ID!
@@ -142,7 +146,6 @@ type Match {
   playedOn: Date!
   season: Int!
   stage: String
-  substitutions: [Substitution!]!
   teamId: ID!
 }
 
@@ -228,18 +231,6 @@ type Stage {
   numTeams: Int
   table: Boolean!
   tableRows: [TableRow!]!
-}
-
-type Substitution {
-  createdAt: DateTime!
-  id: ID!
-  injury: Boolean!
-  matchId: ID!
-  minute: Int!
-  playerId: ID!
-  playerName: String!
-  replacedBy: String!
-  replacementId: ID!
 }
 
 type TableRow {

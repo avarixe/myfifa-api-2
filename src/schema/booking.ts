@@ -6,6 +6,10 @@ builder.prismaObject('Booking', {
     id: t.id({ resolve: booking => booking.id.toString() }),
     matchId: t.id({ resolve: booking => booking.matchId.toString() }),
     minute: t.exposeInt('minute'),
+    capId: t.id({
+      resolve: booking => booking.capId?.toString(),
+      nullable: true
+    }),
     playerId: t.id({
       resolve: booking => booking.playerId?.toString(),
       nullable: true

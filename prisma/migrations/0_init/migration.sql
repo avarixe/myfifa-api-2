@@ -68,6 +68,7 @@ CREATE TABLE "bookings" (
     "updated_at" TIMESTAMP(6) NOT NULL,
     "player_name" VARCHAR,
     "home" BOOLEAN NOT NULL DEFAULT false,
+    "cap_id" BIGINT,
 
     CONSTRAINT "bookings_pkey" PRIMARY KEY ("id")
 );
@@ -82,9 +83,10 @@ CREATE TABLE "caps" (
     "stop" INTEGER DEFAULT 90,
     "created_at" TIMESTAMP(6) NOT NULL,
     "updated_at" TIMESTAMP(6) NOT NULL,
-    "subbed_out" BOOLEAN NOT NULL DEFAULT false,
     "rating" INTEGER,
     "ovr" INTEGER,
+    "next_id" BIGINT,
+    "injured" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "caps_pkey" PRIMARY KEY ("id")
 );
@@ -161,6 +163,8 @@ CREATE TABLE "goals" (
     "created_at" TIMESTAMP(6) NOT NULL,
     "updated_at" TIMESTAMP(6) NOT NULL,
     "assisted_by" VARCHAR,
+    "cap_id" BIGINT,
+    "assist_cap_id" BIGINT,
 
     CONSTRAINT "goals_pkey" PRIMARY KEY ("id")
 );
@@ -318,22 +322,6 @@ CREATE TABLE "stages" (
 );
 
 -- CreateTable
-CREATE TABLE "substitutions" (
-    "id" BIGSERIAL NOT NULL,
-    "match_id" BIGINT,
-    "minute" INTEGER,
-    "player_id" BIGINT,
-    "replacement_id" BIGINT,
-    "injury" BOOLEAN NOT NULL DEFAULT false,
-    "created_at" TIMESTAMP(6) NOT NULL,
-    "updated_at" TIMESTAMP(6) NOT NULL,
-    "player_name" VARCHAR,
-    "replaced_by" VARCHAR,
-
-    CONSTRAINT "substitutions_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "table_rows" (
     "id" BIGSERIAL NOT NULL,
     "stage_id" BIGINT,
@@ -426,6 +414,9 @@ CREATE UNIQUE INDEX "index_active_storage_blobs_on_key" ON "active_storage_blobs
 CREATE UNIQUE INDEX "index_active_storage_variant_records_uniqueness" ON "active_storage_variant_records"("blob_id", "variation_digest");
 
 -- CreateIndex
+CREATE INDEX "index_bookings_on_cap_id" ON "bookings"("cap_id");
+
+-- CreateIndex
 CREATE INDEX "index_bookings_on_match_id" ON "bookings"("match_id");
 
 -- CreateIndex
@@ -435,10 +426,13 @@ CREATE INDEX "index_bookings_on_player_id" ON "bookings"("player_id");
 CREATE INDEX "index_caps_on_match_id" ON "caps"("match_id");
 
 -- CreateIndex
+CREATE INDEX "index_caps_on_next_id" ON "caps"("next_id");
+
+-- CreateIndex
 CREATE INDEX "index_caps_on_player_id" ON "caps"("player_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "index_caps_on_player_id_and_match_id" ON "caps"("player_id", "match_id");
+CREATE UNIQUE INDEX "index_caps_on_player_id_and_match_id_and_start" ON "caps"("player_id", "match_id", "start");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "index_caps_on_pos_and_match_id_and_start" ON "caps"("pos", "match_id", "start");
@@ -462,7 +456,13 @@ CREATE INDEX "index_fixture_legs_on_fixture_id" ON "fixture_legs"("fixture_id");
 CREATE INDEX "index_fixtures_on_stage_id" ON "fixtures"("stage_id");
 
 -- CreateIndex
+CREATE INDEX "index_goals_on_assist_cap_id" ON "goals"("assist_cap_id");
+
+-- CreateIndex
 CREATE INDEX "index_goals_on_assist_id" ON "goals"("assist_id");
+
+-- CreateIndex
+CREATE INDEX "index_goals_on_cap_id" ON "goals"("cap_id");
 
 -- CreateIndex
 CREATE INDEX "index_goals_on_match_id" ON "goals"("match_id");
@@ -508,15 +508,6 @@ CREATE INDEX "index_squads_on_team_id" ON "squads"("team_id");
 
 -- CreateIndex
 CREATE INDEX "index_stages_on_competition_id" ON "stages"("competition_id");
-
--- CreateIndex
-CREATE INDEX "index_substitutions_on_match_id" ON "substitutions"("match_id");
-
--- CreateIndex
-CREATE INDEX "index_substitutions_on_player_id" ON "substitutions"("player_id");
-
--- CreateIndex
-CREATE INDEX "index_substitutions_on_replacement_id" ON "substitutions"("replacement_id");
 
 -- CreateIndex
 CREATE INDEX "index_table_rows_on_stage_id" ON "table_rows"("stage_id");

@@ -24,8 +24,7 @@ builder.prismaObject('Match', {
     bookings: t.relation('bookings'),
     caps: t.relation('caps'),
     goals: t.relation('goals'),
-    penaltyShootout: t.relation('penaltyShootout', { nullable: true }),
-    substitutions: t.relation('substitutions')
+    penaltyShootout: t.relation('penaltyShootout', { nullable: true })
   })
 })
 

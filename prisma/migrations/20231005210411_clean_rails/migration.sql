@@ -13,6 +13,7 @@
   - You are about to drop the `active_storage_variant_records` table. If the table is not empty, all the data it contains will be lost.
   - You are about to drop the `ar_internal_metadata` table. If the table is not empty, all the data it contains will be lost.
   - You are about to drop the `schema_migrations` table. If the table is not empty, all the data it contains will be lost.
+  - A unique constraint covering the columns `[next_id]` on the table `caps` will be added. If there are existing duplicate values, this will fail.
   - A unique constraint covering the columns `[previous_id]` on the table `contracts` will be added. If there are existing duplicate values, this will fail.
   - A unique constraint covering the columns `[match_id]` on the table `penalty_shootouts` will be added. If there are existing duplicate values, this will fail.
   - A unique constraint covering the columns `[previous_id]` on the table `teams` will be added. If there are existing duplicate values, this will fail.
@@ -73,12 +74,6 @@
   - Made the column `name` on table `squads` required. This step will fail if there are existing NULL values in that column.
   - Made the column `competition_id` on table `stages` required. This step will fail if there are existing NULL values in that column.
   - Made the column `name` on table `stages` required. This step will fail if there are existing NULL values in that column.
-  - Made the column `match_id` on table `substitutions` required. This step will fail if there are existing NULL values in that column.
-  - Made the column `minute` on table `substitutions` required. This step will fail if there are existing NULL values in that column.
-  - Made the column `player_id` on table `substitutions` required. This step will fail if there are existing NULL values in that column.
-  - Made the column `replacement_id` on table `substitutions` required. This step will fail if there are existing NULL values in that column.
-  - Made the column `player_name` on table `substitutions` required. This step will fail if there are existing NULL values in that column.
-  - Made the column `replaced_by` on table `substitutions` required. This step will fail if there are existing NULL values in that column.
   - Made the column `stage_id` on table `table_rows` required. This step will fail if there are existing NULL values in that column.
   - Made the column `user_id` on table `teams` required. This step will fail if there are existing NULL values in that column.
   - Made the column `name` on table `teams` required. This step will fail if there are existing NULL values in that column.
@@ -100,7 +95,19 @@ ALTER TABLE "active_storage_attachments" DROP CONSTRAINT "fk_rails_c3b3935057";
 ALTER TABLE "active_storage_variant_records" DROP CONSTRAINT "fk_rails_993965df05";
 
 -- DropIndex
+DROP INDEX "index_bookings_on_cap_id";
+
+-- DropIndex
+DROP INDEX "index_caps_on_next_id";
+
+-- DropIndex
 DROP INDEX "index_contracts_on_previous_id";
+
+-- DropIndex
+DROP INDEX "index_goals_on_assist_cap_id";
+
+-- DropIndex
+DROP INDEX "index_goals_on_cap_id";
 
 -- DropIndex
 DROP INDEX "index_penalty_shootouts_on_match_id";
@@ -219,15 +226,6 @@ ALTER COLUMN "name" SET NOT NULL,
 ALTER COLUMN "created_at" SET DEFAULT CURRENT_TIMESTAMP;
 
 -- AlterTable
-ALTER TABLE "substitutions" ALTER COLUMN "match_id" SET NOT NULL,
-ALTER COLUMN "minute" SET NOT NULL,
-ALTER COLUMN "player_id" SET NOT NULL,
-ALTER COLUMN "replacement_id" SET NOT NULL,
-ALTER COLUMN "created_at" SET DEFAULT CURRENT_TIMESTAMP,
-ALTER COLUMN "player_name" SET NOT NULL,
-ALTER COLUMN "replaced_by" SET NOT NULL;
-
--- AlterTable
 ALTER TABLE "table_rows" ALTER COLUMN "stage_id" SET NOT NULL,
 ALTER COLUMN "created_at" SET DEFAULT CURRENT_TIMESTAMP;
 
@@ -274,6 +272,9 @@ DROP TABLE "ar_internal_metadata";
 DROP TABLE "schema_migrations";
 
 -- CreateIndex
+CREATE UNIQUE INDEX "index_teams_on_next_id" ON "caps"("next_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "index_contracts_on_previous_id" ON "contracts"("previous_id");
 
 -- CreateIndex
@@ -289,6 +290,9 @@ ALTER TABLE "access_tokens" ADD CONSTRAINT "access_tokens_user_id_fkey" FOREIGN 
 ALTER TABLE "bookings" ADD CONSTRAINT "bookings_match_id_fkey" FOREIGN KEY ("match_id") REFERENCES "matches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "bookings" ADD CONSTRAINT "bookings_cap_id_fkey" FOREIGN KEY ("cap_id") REFERENCES "caps"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "bookings" ADD CONSTRAINT "bookings_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "players"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -296,6 +300,9 @@ ALTER TABLE "caps" ADD CONSTRAINT "caps_match_id_fkey" FOREIGN KEY ("match_id") 
 
 -- AddForeignKey
 ALTER TABLE "caps" ADD CONSTRAINT "caps_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "players"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "caps" ADD CONSTRAINT "caps_next_id_fkey" FOREIGN KEY ("next_id") REFERENCES "caps"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "competitions" ADD CONSTRAINT "competitions_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -314,6 +321,12 @@ ALTER TABLE "fixtures" ADD CONSTRAINT "fixtures_stage_id_fkey" FOREIGN KEY ("sta
 
 -- AddForeignKey
 ALTER TABLE "goals" ADD CONSTRAINT "goals_match_id_fkey" FOREIGN KEY ("match_id") REFERENCES "matches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "goals" ADD CONSTRAINT "goals_cap_id_fkey" FOREIGN KEY ("cap_id") REFERENCES "caps"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "goals" ADD CONSTRAINT "goals_assist_cap_id_fkey" FOREIGN KEY ("assist_cap_id") REFERENCES "caps"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "goals" ADD CONSTRAINT "goals_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "players"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -353,15 +366,6 @@ ALTER TABLE "squads" ADD CONSTRAINT "squads_team_id_fkey" FOREIGN KEY ("team_id"
 
 -- AddForeignKey
 ALTER TABLE "stages" ADD CONSTRAINT "stages_competition_id_fkey" FOREIGN KEY ("competition_id") REFERENCES "competitions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "substitutions" ADD CONSTRAINT "substitutions_match_id_fkey" FOREIGN KEY ("match_id") REFERENCES "matches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "substitutions" ADD CONSTRAINT "substitutions_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "players"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "substitutions" ADD CONSTRAINT "substitutions_replacement_id_fkey" FOREIGN KEY ("replacement_id") REFERENCES "players"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "table_rows" ADD CONSTRAINT "table_rows_stage_id_fkey" FOREIGN KEY ("stage_id") REFERENCES "stages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
