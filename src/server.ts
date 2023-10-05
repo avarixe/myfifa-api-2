@@ -3,10 +3,14 @@ import morgan from 'morgan'
 import 'dotenv/config'
 
 import { createYoga } from 'graphql-yoga'
-import schema from './schema'
-import database from './database'
+import { schema } from './schema'
 
-const yoga = createYoga({ schema })
+const yoga = createYoga({
+  schema,
+  context: req => {
+    return { req }
+  }
+})
 
 const app: Express = express()
 const port = process.env.PORT || 3000
@@ -20,13 +24,6 @@ app.get('/', (req: Request, res: Response) => {
 })
 
 app.listen(port, async () => {
-  try {
-    await database.authenticate()
-    console.log('Connection has been established successfully')
-  } catch (err) {
-    console.error('Unable to connect to the database:', err)
-  }
-
   console.log(
     `[server]: Running a GraphQL API server at http://localhost:${port}/graphql`
   )

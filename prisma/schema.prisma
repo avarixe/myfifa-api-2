@@ -1,0 +1,449 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator pothos {
+  provider = "prisma-pothos-types"
+}
+
+model AccessToken {
+  id        BigInt    @id @default(autoincrement())
+  userId    BigInt    @map("user_id")
+  token     String    @db.VarChar
+  expiresAt DateTime? @map("expires_at") @db.Timestamp(6)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamp(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token], map: "index_access_tokens_on_token")
+  @@index([userId], map: "index_access_tokens_on_user_id")
+  @@map("access_tokens")
+}
+
+model Booking {
+  id         BigInt   @id @default(autoincrement())
+  matchId    BigInt   @map("match_id")
+  minute     Int
+  capId      BigInt?  @map("cap_id")
+  playerId   BigInt?  @map("player_id")
+  playerName String   @map("player_name") @db.VarChar
+  redCard    Boolean  @default(false) @map("red_card")
+  home       Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  match  Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  cap    Cap?    @relation(fields: [capId], references: [id], onDelete: Cascade)
+  player Player? @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([matchId], map: "index_bookings_on_match_id")
+  @@index([playerId], map: "index_bookings_on_player_id")
+  @@map("bookings")
+}
+
+model Cap {
+  id        BigInt   @id @default(autoincrement())
+  matchId   BigInt   @map("match_id")
+  playerId  BigInt   @map("player_id")
+  nextId    BigInt?  @map("next_id")
+  pos       String   @db.VarChar
+  start     Int      @default(0)
+  stop      Int      @default(90)
+  rating    Int?
+  ovr       Int
+  injured   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  match    Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player   Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  next     Cap?      @relation("Cap", fields: [nextId], references: [id], onDelete: Cascade)
+  previous Cap?      @relation("Cap")
+  goals    Goal[]
+  assists  Goal[]    @relation("Assist")
+  bookings Booking[]
+
+  @@unique([playerId, matchId, start], map: "index_caps_on_player_id_and_match_id_and_start")
+  @@unique([pos, matchId, start], map: "index_caps_on_pos_and_match_id_and_start")
+  @@unique([nextId], map: "index_teams_on_next_id")
+  @@index([matchId], map: "index_caps_on_match_id")
+  @@index([playerId], map: "index_caps_on_player_id")
+  @@map("caps")
+}
+
+model Competition {
+  id        BigInt   @id @default(autoincrement())
+  teamId    BigInt   @map("team_id")
+  season    Int
+  name      String   @db.VarChar
+  champion  String?  @db.VarChar
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  stages Stage[]
+  team   Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([season], map: "index_competitions_on_season")
+  @@index([teamId], map: "index_competitions_on_team_id")
+  @@map("competitions")
+}
+
+model Contract {
+  id               BigInt    @id @default(autoincrement())
+  playerId         BigInt    @map("player_id")
+  previousId       BigInt?   @map("previous_id")
+  signedOn         DateTime? @map("signed_on") @db.Date
+  startedOn        DateTime? @map("started_on") @db.Date
+  endedOn          DateTime? @map("ended_on") @db.Date
+  wage             Int?
+  signingBonus     Int?      @map("signing_bonus")
+  releaseClause    Int?      @map("release_clause")
+  performanceBonus Int?      @map("performance_bonus")
+  bonusReq         Int?      @map("bonus_req")
+  bonusReqType     String?   @map("bonus_req_type") @db.VarChar
+  conclusion       String?   @db.VarChar
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  player   Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  previous Contract? @relation("ContractHistory", fields: [previousId], references: [id], onDelete: SetNull)
+  renewal  Contract? @relation("ContractHistory")
+
+  @@unique([previousId], map: "index_contracts_on_previous_id")
+  @@index([playerId], map: "index_contracts_on_player_id")
+  @@map("contracts")
+}
+
+model FixtureLeg {
+  id        BigInt   @id @default(autoincrement())
+  fixtureId BigInt   @map("fixture_id")
+  homeScore String?  @map("home_score") @db.VarChar
+  awayScore String?  @map("away_score") @db.VarChar
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+
+  @@index([fixtureId], map: "index_fixture_legs_on_fixture_id")
+  @@map("fixture_legs")
+}
+
+model Fixture {
+  id        BigInt   @id @default(autoincrement())
+  stageId   BigInt   @map("stage_id")
+  homeTeam  String?  @map("home_team") @db.VarChar
+  awayTeam  String?  @map("away_team") @db.VarChar
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  legs  FixtureLeg[]
+  stage Stage        @relation(fields: [stageId], references: [id], onDelete: Cascade)
+
+  @@index([stageId], map: "index_fixtures_on_stage_id")
+  @@map("fixtures")
+}
+
+model Goal {
+  id          BigInt   @id @default(autoincrement())
+  matchId     BigInt   @map("match_id")
+  minute      Int
+  capId       BigInt?  @map("cap_id")
+  assistCapId BigInt?  @map("assist_cap_id")
+  playerId    BigInt?  @map("player_id")
+  playerName  String   @map("player_name") @db.VarChar
+  assistId    BigInt?  @map("assist_id")
+  assistedBy  String?  @map("assisted_by") @db.VarChar
+  home        Boolean  @default(false)
+  ownGoal     Boolean  @default(false) @map("own_goal")
+  penalty     Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  match     Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  cap       Cap?    @relation(fields: [capId], references: [id], onDelete: Cascade)
+  assistCap Cap?    @relation("Assist", fields: [assistCapId], references: [id], onDelete: Cascade)
+  player    Player? @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  assister  Player? @relation("Assist", fields: [assistId], references: [id], onDelete: SetNull)
+
+  @@index([assistId], map: "index_goals_on_assist_id")
+  @@index([matchId], map: "index_goals_on_match_id")
+  @@index([playerId], map: "index_goals_on_player_id")
+  @@map("goals")
+}
+
+model Injury {
+  id          BigInt   @id @default(autoincrement())
+  playerId    BigInt   @map("player_id")
+  startedOn   DateTime @map("started_on") @db.Date
+  endedOn     DateTime @map("ended_on") @db.Date
+  description String   @db.VarChar
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId], map: "index_injuries_on_player_id")
+  @@map("injuries")
+}
+
+model Loan {
+  id             BigInt    @id @default(autoincrement())
+  playerId       BigInt    @map("player_id")
+  signedOn       DateTime? @map("signed_on") @db.Date
+  startedOn      DateTime  @map("started_on") @db.Date
+  endedOn        DateTime  @map("ended_on") @db.Date
+  origin         String    @db.VarChar
+  destination    String    @db.VarChar
+  wagePercentage Int?      @map("wage_percentage")
+  transferFee    Int?      @map("transfer_fee")
+  addonClause    Int?      @map("addon_clause")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId], map: "index_loans_on_player_id")
+  @@map("loans")
+}
+
+model Match {
+  id          BigInt   @id @default(autoincrement())
+  teamId      BigInt   @map("team_id")
+  home        String   @db.VarChar
+  away        String   @db.VarChar
+  season      Int
+  competition String?  @db.VarChar
+  stage       String?  @db.VarChar
+  playedOn    DateTime @map("played_on") @db.Date
+  homeScore   Int      @default(0) @map("home_score")
+  awayScore   Int      @default(0) @map("away_score")
+  extraTime   Boolean  @default(false) @map("extra_time")
+  friendly    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  bookings        Booking[]
+  caps            Cap[]
+  goals           Goal[]
+  penaltyShootout PenaltyShootout?
+  team            Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId], map: "index_matches_on_team_id")
+  @@map("matches")
+}
+
+model Option {
+  id       BigInt  @id @default(autoincrement())
+  userId   BigInt  @map("user_id")
+  category String? @db.VarChar
+  value    String? @db.VarChar
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, value], map: "index_options_on_user_id_and_category_and_value")
+  @@index([userId], map: "index_options_on_user_id")
+  @@map("options")
+}
+
+model PenaltyShootout {
+  id        BigInt   @id @default(autoincrement())
+  matchId   BigInt   @map("match_id")
+  homeScore Int      @map("home_score")
+  awayScore Int      @map("away_score")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId], map: "index_penalty_shootouts_on_match_id")
+  @@map("penalty_shootouts")
+}
+
+model PlayerHistory {
+  id         BigInt   @id @default(autoincrement())
+  playerId   BigInt   @map("player_id")
+  recordedOn DateTime @map("recorded_on") @db.Date
+  ovr        Int
+  value      Int
+  kitNo      Int?     @map("kit_no")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId], map: "index_player_histories_on_player_id")
+  @@map("player_histories")
+}
+
+model Player {
+  id          BigInt   @id @default(autoincrement())
+  teamId      BigInt   @map("team_id")
+  name        String   @db.VarChar
+  nationality String?  @db.VarChar
+  pos         String   @db.VarChar
+  secPos      String[] @default([]) @map("sec_pos")
+  ovr         Int
+  value       Int
+  birthYear   Int      @map("birth_year")
+  status      String?  @db.VarChar
+  youth       Boolean  @default(false)
+  kitNo       Int?     @map("kit_no")
+  coverage    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  bookings     Booking[]
+  caps         Cap[]
+  contracts    Contract[]
+  goals        Goal[]
+  assists      Goal[]          @relation("Assist")
+  injuries     Injury[]
+  loans        Loan[]
+  histories    PlayerHistory[]
+  squadPlayers SquadPlayer[]
+  transfers    Transfer[]
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([coverage], map: "index_players_on_coverage", type: Gin)
+  @@index([teamId], map: "index_players_on_team_id")
+  @@map("players")
+}
+
+model SquadPlayer {
+  id        BigInt   @id @default(autoincrement())
+  squadId   BigInt   @map("squad_id")
+  playerId  BigInt   @map("player_id")
+  pos       String   @db.VarChar
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  squad  Squad  @relation(fields: [squadId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId], map: "index_squad_players_on_player_id")
+  @@index([squadId], map: "index_squad_players_on_squad_id")
+  @@map("squad_players")
+}
+
+model Squad {
+  id        BigInt   @id @default(autoincrement())
+  teamId    BigInt   @map("team_id")
+  name      String   @db.VarChar
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  squadPlayers SquadPlayer[]
+  team         Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId], map: "index_squads_on_team_id")
+  @@map("squads")
+}
+
+model Stage {
+  id            BigInt   @id @default(autoincrement())
+  competitionId BigInt   @map("competition_id")
+  name          String   @db.VarChar
+  numTeams      Int?     @map("num_teams")
+  numFixtures   Int?     @map("num_fixtures")
+  table         Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  fixtures    Fixture[]
+  tableRows   TableRow[]
+
+  @@index([competitionId], map: "index_stages_on_competition_id")
+  @@map("stages")
+}
+
+model TableRow {
+  id           BigInt   @id @default(autoincrement())
+  stageId      BigInt   @map("stage_id")
+  name         String?  @db.VarChar
+  wins         Int?     @default(0)
+  draws        Int?     @default(0)
+  losses       Int?     @default(0)
+  goalsFor     Int?     @default(0) @map("goals_for")
+  goalsAgainst Int?     @default(0) @map("goals_against")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  stage Stage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+
+  @@index([stageId], map: "index_table_rows_on_stage_id")
+  @@map("table_rows")
+}
+
+model Team {
+  id          BigInt   @id @default(autoincrement())
+  userId      BigInt   @map("user_id")
+  previousId  BigInt?  @map("previous_id")
+  name        String   @db.VarChar
+  startedOn   DateTime @map("started_on") @db.Date
+  currentlyOn DateTime @map("currently_on") @db.Date
+  active      Boolean  @default(true)
+  currency    String   @default("$") @db.VarChar
+  game        String?  @db.VarChar
+  managerName String?  @map("manager_name") @db.VarChar
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  competitions Competition[]
+  players      Player[]
+  matches      Match[]
+  squads       Squad[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  previous     Team?         @relation("Career", fields: [previousId], references: [id], onDelete: SetNull)
+  next         Team?         @relation("Career")
+
+  @@unique([previousId], map: "index_teams_on_previous_id")
+  @@index([userId], map: "index_teams_on_user_id")
+  @@map("teams")
+}
+
+model Transfer {
+  id           BigInt    @id @default(autoincrement())
+  playerId     BigInt    @map("player_id")
+  signedOn     DateTime? @map("signed_on") @db.Date
+  movedOn      DateTime  @map("moved_on") @db.Date
+  origin       String    @db.VarChar
+  destination  String    @db.VarChar
+  fee          Int?
+  tradedPlayer String?   @map("traded_player") @db.VarChar
+  addonClause  Int?      @map("addon_clause")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId], map: "index_transfers_on_player_id")
+  @@map("transfers")
+}
+
+model User {
+  id                  BigInt    @id @default(autoincrement())
+  email               String    @unique(map: "index_users_on_email") @default("") @db.VarChar
+  username            String    @unique(map: "index_users_on_username") @db.VarChar
+  fullName            String    @map("full_name") @db.VarChar
+  encryptedPassword   String    @default("") @map("encrypted_password") @db.VarChar
+  resetPasswordToken  String?   @unique(map: "index_users_on_reset_password_token") @map("reset_password_token") @db.VarChar
+  resetPasswordSentAt DateTime? @map("reset_password_sent_at") @db.Timestamp(6)
+  admin               Boolean   @default(false)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  accessTokens AccessToken[]
+  options      Option[]
+  teams        Team[]
+
+  @@map("users")
+}
