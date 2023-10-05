@@ -36,7 +36,7 @@ builder.prismaObject('Contract', {
       resolve: player => player.createdAt
     }),
 
-    previous: t.relation('previous'),
-    renewal: t.relation('renewal')
+    previous: t.relation('previous', { nullable: true }),
+    renewal: t.relation('renewal', { nullable: true })
   })
 })
