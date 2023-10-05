@@ -7,7 +7,6 @@ builder.prismaObject('Player', {
     id: t.id({ resolve: player => player.id.toString() }),
     teamId: t.id({ resolve: player => player.teamId.toString() }),
     name: t.exposeString('name'),
-
     nationality: t.exposeString('nationality', { nullable: true }),
     pos: t.exposeString('pos'),
     secPos: t.exposeStringList('secPos'),
@@ -25,7 +24,13 @@ builder.prismaObject('Player', {
     createdAt: t.field({
       type: 'DateTime',
       resolve: player => player.createdAt
-    })
+    }),
+
+    contracts: t.relation('contracts'),
+    injuries: t.relation('injuries'),
+    loans: t.relation('loans'),
+    histories: t.relation('histories'),
+    transfers: t.relation('transfers')
   })
 })
 

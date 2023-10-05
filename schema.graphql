@@ -1,3 +1,22 @@
+type Contract {
+  bonusReq: Int
+  bonusReqType: String
+  conclusion: String
+  createdAt: DateTime!
+  endedOn: Date
+  id: ID!
+  performanceBonus: Int
+  playerId: ID!
+  previous: Contract!
+  previousId: ID
+  releaseClause: Int
+  renewal: Contract!
+  signedOn: Date
+  signingBonus: Int
+  startedOn: Date
+  wage: Int
+}
+
 """
 A date string, such as 2007-12-03, compliant with the `full-date` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
@@ -8,11 +27,38 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+type Injury {
+  createdAt: DateTime!
+  description: String!
+  endedOn: Date!
+  id: ID!
+  playerId: ID!
+  startedOn: Date!
+}
+
+type Loan {
+  addonClause: Int
+  createdAt: DateTime!
+  destination: String!
+  endedOn: Date!
+  id: ID!
+  origin: String!
+  playerId: ID!
+  signedOn: Date
+  startedOn: Date!
+  transferFee: Int
+  wagePercentage: Int
+}
+
 type Player {
   birthYear: Int!
+  contracts: [Contract!]!
   createdAt: DateTime!
+  histories: [PlayerHistory!]!
   id: ID!
+  injuries: [Injury!]!
   kitNo: Int
+  loans: [Loan!]!
   name: String!
   nationality: String
   ovr: Int!
@@ -20,8 +66,19 @@ type Player {
   secPos: [String!]!
   status: String
   teamId: ID!
+  transfers: [Transfer!]!
   value: Int!
   youth: Boolean!
+}
+
+type PlayerHistory {
+  createdAt: DateTime!
+  id: ID!
+  kitNo: Int
+  ovr: Int!
+  playerId: ID!
+  recordedOn: Date!
+  value: Int!
 }
 
 type Query {
@@ -42,4 +99,17 @@ type Team {
   previousId: ID
   startedOn: Date!
   userId: ID!
+}
+
+type Transfer {
+  addonClause: Int
+  createdAt: DateTime!
+  destination: String!
+  fee: Int
+  id: ID!
+  movedOn: Date!
+  origin: String!
+  playerId: ID!
+  signedOn: Date
+  tradedPlayer: String
 }

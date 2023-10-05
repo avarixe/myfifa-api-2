@@ -26,6 +26,7 @@ builder.prismaObject('Team', {
       type: 'DateTime',
       resolve: team => team.createdAt
     }),
+
     players: t.relation('players')
   })
 })
