@@ -1,3 +1,13 @@
+type Competition {
+  champion: String
+  createdAt: DateTime!
+  id: ID!
+  name: String!
+  season: Int!
+  stages: [Stage!]!
+  teamId: ID!
+}
+
 type Contract {
   bonusReq: Int
   bonusReqType: String
@@ -26,6 +36,23 @@ scalar Date
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
 scalar DateTime
+
+type Fixture {
+  awayTeam: String
+  createdAt: DateTime!
+  homeTeam: String
+  id: ID!
+  legs: [FixtureLeg!]!
+  stageId: ID!
+}
+
+type FixtureLeg {
+  awayScore: String
+  createdAt: DateTime!
+  fixtureId: ID!
+  homeScore: String
+  id: ID!
+}
 
 type Injury {
   createdAt: DateTime!
@@ -82,9 +109,34 @@ type PlayerHistory {
 }
 
 type Query {
+  competition(id: ID!): Competition
   player(id: ID!): Player
   team(id: ID!): Team
   teams: [Team!]!
+}
+
+type Stage {
+  competitionId: ID!
+  createdAt: DateTime!
+  fixtures: [Fixture!]!
+  id: ID!
+  name: String!
+  numFixtures: Int
+  numTeams: Int
+  table: Boolean!
+  tableRows: [TableRow!]!
+}
+
+type TableRow {
+  createdAt: DateTime!
+  draws: Int
+  goalsAgainst: Int
+  goalsFor: Int
+  id: ID!
+  losses: Int
+  name: String
+  stageId: ID!
+  wins: Int
 }
 
 type Team {
