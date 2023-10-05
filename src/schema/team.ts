@@ -32,7 +32,16 @@ builder.prismaObject('Team', {
 builder.queryFields(t => ({
   teams: t.prismaField({
     type: ['Team'],
-    resolve: async (query, _root, _args, _ctx, _info) =>
+    resolve: (query, _root, _args, _ctx, _info) =>
       prisma.team.findMany({ ...query })
+  }),
+  team: t.prismaField({
+    type: 'Team',
+    nullable: true,
+    args: {
+      id: t.arg.id({ required: true })
+    },
+    resolve: async (query, _parent, args) =>
+      prisma.team.findUnique({ ...query, where: { id: args.id } })
   })
 }))
