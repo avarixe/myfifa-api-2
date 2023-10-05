@@ -8,7 +8,24 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+type Player {
+  birthYear: Int!
+  createdAt: DateTime!
+  id: ID!
+  kitNo: Int
+  name: String!
+  nationality: String
+  ovr: Int!
+  pos: String!
+  secPos: [String!]!
+  status: String
+  teamId: ID!
+  value: Int!
+  youth: Boolean!
+}
+
 type Query {
+  player(id: ID!): Player
   team(id: ID!): Team
   teams: [Team!]!
 }
@@ -21,6 +38,7 @@ type Team {
   id: ID!
   managerName: String
   name: String!
+  players: [Player!]!
   previousId: ID
   startedOn: Date!
   userId: ID!

@@ -25,7 +25,8 @@ builder.prismaObject('Team', {
     createdAt: t.field({
       type: 'DateTime',
       resolve: team => team.createdAt
-    })
+    }),
+    players: t.relation('players')
   })
 })
 
@@ -42,6 +43,6 @@ builder.queryFields(t => ({
       id: t.arg.id({ required: true })
     },
     resolve: async (query, _parent, args) =>
-      prisma.team.findUnique({ ...query, where: { id: args.id } })
+      prisma.team.findUnique({ ...query, where: { id: Number(args.id) } })
   })
 }))

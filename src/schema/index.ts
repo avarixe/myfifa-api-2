@@ -1,5 +1,6 @@
 import { builder } from '../builder'
 import './team'
+import './player'
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
 import { printSchema } from 'graphql'
