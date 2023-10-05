@@ -31,8 +31,7 @@
     "graphql-yoga": "^4.0.3",
     "morgan": "^1.10.0",
     "pg": "^8.11.1",
-    "pg-hstore": "^2.3.4",
-    "sequelize": "^6.32.1"
+    "pg-hstore": "^2.3.4"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.6.7",
