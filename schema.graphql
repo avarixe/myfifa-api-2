@@ -179,8 +179,26 @@ type Query {
   competition(id: ID!): Competition
   match(id: ID!): Match
   player(id: ID!): Player
+  squad(id: ID!): Squad
   team(id: ID!): Team
   teams: [Team!]!
+}
+
+type Squad {
+  createdAt: DateTime!
+  id: ID!
+  name: String!
+  squadPlayers: [SquadPlayer!]!
+  teamId: ID!
+}
+
+type SquadPlayer {
+  createdAt: DateTime!
+  id: ID!
+  player: Player!
+  playerId: ID!
+  pos: String!
+  squadId: ID!
 }
 
 type Stage {
@@ -233,6 +251,7 @@ type Team {
   players: [Player!]!
   previous: Team
   previousId: ID
+  squads: [Squad!]!
   startedOn: Date!
   userId: ID!
 }

@@ -30,7 +30,7 @@ builder.prismaObject('Team', {
     competitions: t.relation('competitions'),
     players: t.relation('players'),
     matches: t.relation('matches'),
-    // squads: t.relation('squads'),
+    squads: t.relation('squads'),
     previous: t.relation('previous', { nullable: true }),
     next: t.relation('next', { nullable: true })
   })
