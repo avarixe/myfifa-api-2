@@ -1,7 +1,8 @@
+import { Prisma } from '@prisma/client'
 import { builder } from '../builder'
 import { prisma } from '../db'
 
-builder.prismaObject('Team', {
+const Team = builder.prismaObject('Team', {
   name: 'Team',
   fields: t => ({
     id: t.id({ resolve: team => team.id.toString() }),
@@ -36,6 +37,17 @@ builder.prismaObject('Team', {
   })
 })
 
+const TeamAttributes = builder.inputType('TeamAttributes', {
+  fields: t => ({
+    name: t.string({ required: true }),
+    startedOn: t.field({ type: 'Date', required: true }),
+    currentlyOn: t.field({ type: 'Date', required: true }),
+    currency: t.string({ required: true }),
+    game: t.string(),
+    managerName: t.string()
+  })
+})
+
 builder.queryFields(t => ({
   teams: t.prismaField({
     type: ['Team'],
@@ -50,5 +62,33 @@ builder.queryFields(t => ({
     },
     resolve: async (query, _parent, args) =>
       prisma.team.findUnique({ ...query, where: { id: Number(args.id) } })
+  })
+}))
+
+builder.mutationFields(t => ({
+  addTeam: t.field({
+    type: Team,
+    args: {
+      attributes: t.arg({ type: TeamAttributes, required: true })
+    },
+    errors: {
+      types: [Error]
+    },
+    resolve: async (_parent, args) => {
+      const currentUser = await prisma.user.findFirst()
+
+      const team = await prisma.team.create({
+        data: Prisma.validator<Prisma.TeamCreateInput>()({
+          user: {
+            connect: {
+              id: currentUser?.id || 1
+            }
+          },
+          ...args.attributes
+        })
+      })
+
+      return team
+    }
   })
 }))

@@ -73,6 +73,10 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+type Error {
+  message: String!
+}
+
 type Fixture {
   awayTeam: String
   createdAt: DateTime!
@@ -148,6 +152,12 @@ type Match {
   stage: String
   teamId: ID!
 }
+
+type Mutation {
+  addTeam(attributes: TeamAttributes!): MutationAddTeamResult!
+}
+
+union MutationAddTeamResult = Error | Team
 
 type Option {
   category: String
@@ -262,6 +272,15 @@ type Team {
   squads: [Squad!]!
   startedOn: Date!
   userId: ID!
+}
+
+input TeamAttributes {
+  currency: String!
+  currentlyOn: Date!
+  game: String
+  managerName: String
+  name: String!
+  startedOn: Date!
 }
 
 type Transfer {
